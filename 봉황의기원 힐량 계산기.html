@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>힐량 비교 계산기</title>
+<style>
+  body {
+    font-family: 'Malgun Gothic', sans-serif;
+    background-color: #f4f6f9;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
+  .container {
+    background: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    max-width: 650px;
+    width: 100%;
+  }
+  h2 {
+    margin-top: 0;
+    text-align: center;
+    color: #2c3e50;
+  }
+  .fixed-info {
+    background-color: #e8f4fd;
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 0.95em;
+    text-align: center;
+    color: #1a5276;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+  }
+  th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+  }
+  td:first-child {
+    text-align: left;
+    font-weight: 500;
+    background-color: #fafafa;
+    width: 44%;
+  }
+  input[type="number"] {
+    width: 90%;
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    text-align: right;
+    font-size: 1em;
+  }
+  .result-row {
+    background-color: #fdfefe;
+    font-weight: bold;
+  }
+  .final-row {
+    background-color: #eafaf1;
+    font-weight: bold;
+    color: #1e8449;
+    font-size: 1.05em;
+  }
+  .summary {
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: bold;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+  }
+  .plus { color: #27ae60; }
+  .minus { color: #c0392b; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>힐량 계산기 (셋팅 비교)</h2>
+  <div class="fixed-info">
+    <strong>[고정 수치]</strong> 기본힐: 30,000 | 기본비율: 2.5% | 적용률: 52%
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>항목</th>
+        <th>1번 셋팅</th>
+        <th>2번 셋팅</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>지력</td>
+        <td><input type="number" id="int1" value="0" oninput="calculate()"></td>
+        <td><input type="number" id="int2" value="0" oninput="calculate()"></td>
+      </tr>
+      <tr>
+        <td>최대마력</td>
+        <td><input type="number" id="mp1" value="0" oninput="calculate()"></td>
+        <td><input type="number" id="mp2" value="0" oninput="calculate()"></td>
+      </tr>
+      <tr>
+        <td>회복량</td>
+        <td><input type="number" id="rec1" value="1" step="0.01" oninput="calculate()"></td>
+        <td><input type="number" id="rec2" value="1" step="0.01" oninput="calculate()"></td>
+      </tr>
+      <tr>
+        <td>강화량 (%)</td>
+        <td><input type="number" id="enh1" value="0" step="0.1" oninput="calculate()"></td>
+        <td><input type="number" id="enh2" value="0" step="0.1" oninput="calculate()"></td>
+      </tr>
+      <tr class="result-row">
+        <td>1번 (기본힐 + 지력×100)</td>
+        <td id="step1_1">0</td>
+        <td id="step1_2">0</td>
+      </tr>
+      <tr class="result-row">
+        <td>2번 (최대마력 × 2.5%)</td>
+        <td id="step2_1">0</td>
+        <td id="step2_2">0</td>
+      </tr>
+      <tr class="result-row">
+        <td>3번 (1번 + 2번)</td>
+        <td id="step3_1">0</td>
+        <td id="step3_2">0</td>
+      </tr>
+      <tr class="result-row">
+        <td>4번 (3번 × 회복량)</td>
+        <td id="step4_1">0</td>
+        <td id="step4_2">0</td>
+      </tr>
+      <tr class="result-row">
+        <td>5번 (최대마력 × 강화량% × 52%)</td>
+        <td id="step5_1">0</td>
+        <td id="step5_2">0</td>
+      </tr>
+      <tr class="final-row">
+        <td>최종 6번 값 (4번 + 5번)</td>
+        <td id="step6_1">0</td>
+        <td id="step6_2">0</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="summary" id="diffSummary">
+    1번 셋팅 대비 2번 셋팅 변화: 0% (0)
+  </div>
+</div>
+
+<script>
+  function calculate() {
+    const BASE_HEAL = 30000;
+    const BASE_RATIO = 0.025; // 기본비율 2.5% 반영
+    const APPLY_RATE = 0.52;  // 적용률 52%
+
+    for (let i = 1; i <= 2; i++) {
+      const intel = parseFloat(document.getElementById('int' + i).value) || 0;
+      const mp = parseFloat(document.getElementById('mp' + i).value) || 0;
+      const rec = parseFloat(document.getElementById('rec' + i).value) || 0;
+      const enh = parseFloat(document.getElementById('enh' + i).value) || 0;
+
+      // 1번: 기본힐 + 지력 × 100
+      const step1 = BASE_HEAL + (intel * 100);
+      // 2번: 최대마력 × 2.5%
+      const step2 = mp * BASE_RATIO;
+      // 3번: 1번 + 2번
+      const step3 = step1 + step2;
+      // 4번: 3번 × 회복량
+      const step4 = step3 * rec;
+      // 5번: 최대마력 × 강화량% × 52%
+      const step5 = mp * (enh / 100) * APPLY_RATE;
+      // 6번: 4번 + 5번
+      const step6 = step4 + step5;
+
+      document.getElementById('step1_' + i).innerText = Math.round(step1).toLocaleString();
+      document.getElementById('step2_' + i).innerText = Math.round(step2).toLocaleString();
+      document.getElementById('step3_' + i).innerText = Math.round(step3).toLocaleString();
+      document.getElementById('step4_' + i).innerText = Math.round(step4).toLocaleString();
+      document.getElementById('step5_' + i).innerText = Math.round(step5).toLocaleString();
+      document.getElementById('step6_' + i).innerText = Math.round(step6).toLocaleString();
+    }
+
+    // 최종 비교 계산
+    const final1 = parseFloat(document.getElementById('step6_1').innerText.replace(/,/g, '')) || 0;
+    const final2 = parseFloat(document.getElementById('step6_2').innerText.replace(/,/g, '')) || 0;
+    const diff = final2 - final1;
+    const percent = final1 !== 0 ? ((diff / final1) * 100).toFixed(2) : 0;
+
+    const summaryEl = document.getElementById('diffSummary');
+    if (diff > 0) {
+      summaryEl.innerHTML = `1번 셋팅 대비 2번 셋팅 변화: <span class="plus">+${percent}% (+${diff.toLocaleString()})</span>`;
+    } else if (diff < 0) {
+      summaryEl.innerHTML = `1번 셋팅 대비 2번 셋팅 변화: <span class="minus">${percent}% (${diff.toLocaleString()})</span>`;
+    } else {
+      summaryEl.innerHTML = `1번 셋팅 대비 2번 셋팅 변화: 0% (0)`;
+    }
+  }
+
+  // 초기 로드 시 계산 실행
+  calculate();
+</script>
+
+</body>
+</html>
